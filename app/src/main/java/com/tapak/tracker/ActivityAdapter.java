@@ -17,6 +17,7 @@ public class ActivityAdapter extends RecyclerView.Adapter<ActivityAdapter.ViewHo
 
     public interface OnActivityActionListener {
         void onKudosClick(int position);
+        void onDownloadClick(int position);
         void onDeleteClick(int position);
     }
 
@@ -44,6 +45,7 @@ public class ActivityAdapter extends RecyclerView.Adapter<ActivityAdapter.ViewHo
         holder.btnKudos.setText("👍 Kudos (" + item.kudosCount + ")");
 
         holder.btnKudos.setOnClickListener(v -> listener.onKudosClick(holder.getAdapterPosition()));
+        holder.btnDownload.setOnClickListener(v -> listener.onDownloadClick(holder.getAdapterPosition()));
         holder.btnDelete.setOnClickListener(v -> listener.onDeleteClick(holder.getAdapterPosition()));
     }
 
@@ -54,7 +56,7 @@ public class ActivityAdapter extends RecyclerView.Adapter<ActivityAdapter.ViewHo
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvDate, tvBadge, tvDistance, tvPace, tvDuration;
-        Button btnKudos, btnDelete;
+        Button btnKudos, btnDownload, btnDelete;
 
         ViewHolder(View v) {
             super(v);
@@ -65,6 +67,7 @@ public class ActivityAdapter extends RecyclerView.Adapter<ActivityAdapter.ViewHo
             tvPace = v.findViewById(R.id.tvItemPace);
             tvDuration = v.findViewById(R.id.tvItemDuration);
             btnKudos = v.findViewById(R.id.btnKudos);
+            btnDownload = v.findViewById(R.id.btnDownload);
             btnDelete = v.findViewById(R.id.btnDelete);
         }
     }
