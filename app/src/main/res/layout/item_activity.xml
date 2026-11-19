@@ -147,6 +147,16 @@
                 android:layout_weight="1" />
 
             <Button
+                android:id="@+id/btnDownload"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="⬇️ Unduh"
+                android:textColor="#212121"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <Button
                 android:id="@+id/btnDelete"
                 style="?android:attr/borderlessButtonStyle"
                 android:layout_width="wrap_content"
