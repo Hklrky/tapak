@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:background="#F5F6F8">
 
+    
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -36,23 +37,27 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
+        
         <LinearLayout
             android:id="@+id/layoutRecord"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            
             <org.osmdroid.views.MapView
                 android:id="@+id/mapView"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
+            
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -61,6 +66,7 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
+                
                 <RadioGroup
                     android:id="@+id/rgSportType"
                     android:layout_width="match_parent"
@@ -194,7 +200,7 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <LinearLayout
+             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -232,7 +238,7 @@
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:visibility="gone">
-
+            
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -260,6 +266,16 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/tvWeeklyStreak"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="🔥 Weekly Streak: 0 Minggu"
+                    android:textColor="#FC4C02"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
                 <ProgressBar
                     android:id="@+id/pbWeeklyGoal"
                     style="?android:attr/progressBarStyleHorizontal"
@@ -278,7 +294,7 @@
                 android:paddingHorizontal="12dp" />
         </LinearLayout>
     </FrameLayout>
-  
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
