@@ -70,9 +70,9 @@ jobs:
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
           if [ -f "./gradlew" ]; then
             chmod +x ./gradlew
-            ./gradlew clean assembleDebug --refresh-dependencies --no-daemon
+            ./gradlew clean assembleDebug --no-daemon
           else
-            gradle clean assembleDebug --refresh-dependencies --no-daemon
+            gradle clean assembleDebug --no-daemon
           fi
 
       - name: Sign APK, Copy to Repo, Generate update.json & Extract SHA-1 & SHA-256
