@@ -3,6 +3,7 @@ package com.tapak.tracker;
 import android.Manifest;
 import android.content.Intent;
 import android.app.AlertDialog;
+import android.os.SystemClock;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -79,7 +80,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private RecyclerView rvFeed;
 
     private boolean isTracking = false;
-    private long elapsedSeconds = 0;
+    private long accumulatedElapsedMs = 0L;
+    private long segmentStartRealtimeMs = 0L;
     private double totalDistanceMeters = 0.0;
     private Location lastLocation = null;
     private final List<GeoPoint> routePoints = new ArrayList<>();
@@ -92,12 +94,19 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         @Override
         public void run() {
             if (isTracking) {
-                elapsedSeconds++;
                 updateLiveStatsUI();
-                timerHandler.postDelayed(this, 1000);
+                timerHandler.postDelayed(this, 500);
             }
         }
     };
+
+    private long getCurrentElapsedSeconds() {
+        long totalMs = accumulatedElapsedMs;
+        if (isTracking && segmentStartRealtimeMs > 0L) {
+            totalMs += Math.max(0L, SystemClock.elapsedRealtime() - segmentStartRealtimeMs);
+        }
+        return totalMs / 1000L;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
