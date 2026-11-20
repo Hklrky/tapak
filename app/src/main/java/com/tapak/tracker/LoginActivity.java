@@ -62,7 +62,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
     );
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -160,7 +160,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (isRegister) {
                     Toast.makeText(
                             LoginActivity.this,
-                            "Pendaftaran berhasil! Tautan verifikasi dikirim ke " + user.getEmail() + ". Verifikasi dulu lalu tekan CEK VERIFIKASI.",
+                            "Pendaftaran akun baru berhasil! Tautan verifikasi dikirim ke " + user.getEmail() + ". Verifikasi dulu lalu tekan CEK VERIFIKASI.",
                             Toast.LENGTH_LONG
                     ).show();
                 } else {
