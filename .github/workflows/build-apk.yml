@@ -63,14 +63,17 @@ jobs:
               -keypass android \
               -dname "CN=TAPAK, OU=Dev, O=TAPAK, L=Surabaya, S=East Java, C=ID" >/dev/null 2>&1
           fi
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
 
       - name: Clean and Build Debug APK
         run: |
           set -e
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-          chmod +x ./gradlew
-          ./gradlew clean assembleDebug --no-daemon
-
+          gradle clean assembleDebug --no-daemon
+          
       - name: Sign APK, Copy to Repo, Generate update.json & Extract SHA-1 & SHA-256
         env:
           SECRET_STORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
