@@ -1,4 +1,3 @@
-
 package com.tapak.tracker;
 
 import android.app.Activity;
@@ -17,7 +16,8 @@ import java.net.URL;
 
 public class LiveUpdateManager {
 
-    private static final String UPDATE_JSON_URL = "https://contoh-url-kamu/tapak-version.json";
+    private static final String GITHUB_UPDATE_JSON_URL =
+            "https://raw.githubusercontent.com/Hklrky/tapak/main/update.json";
 
     private final Activity activity;
 
@@ -29,9 +29,10 @@ public class LiveUpdateManager {
         new Thread(() -> {
             HttpURLConnection connection = null;
             try {
-                URL url = new URL(UPDATE_JSON_URL);
+                URL url = new URL(GITHUB_UPDATE_JSON_URL + "?t=" + System.currentTimeMillis());
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
+                connection.setUseCaches(false);
                 connection.setConnectTimeout(7000);
                 connection.setReadTimeout(7000);
 
@@ -39,26 +40,24 @@ public class LiveUpdateManager {
                     BufferedReader reader = new BufferedReader(
                             new InputStreamReader(connection.getInputStream())
                     );
-                    StringBuilder response = new StringBuilder();
+                    StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        response.append(line);
+                        sb.append(line);
                     }
                     reader.close();
 
-                    JSONObject json = new JSONObject(response.toString());
+                    JSONObject json = new JSONObject(sb.toString());
                     int latestVersionCode = json.optInt("versionCode", 1);
                     String latestVersionName = json.optString("versionName", "1.0");
-                    String changelog = json.optString("changelog", "Pembaruan fitur tersedia.");
+                    String changelog = json.optString("changelog", "Versi baru TAPAK tersedia.");
                     String apkUrl = json.optString("apkUrl", "");
 
-                    int currentVersionCode = getCurrentVersionCode();
-                    if (latestVersionCode > currentVersionCode && !apkUrl.isEmpty()) {
-                        activity.runOnUiThread(() -> showUpdateDialog(latestVersionName, changelog, apkUrl));
+                    if (latestVersionCode > getCurrentVersionCode() && !apkUrl.isEmpty()) {
+                        activity.runOnUiThread(() -> showUpdatePopup(latestVersionName, changelog, apkUrl));
                     }
                 }
             } catch (Exception ignored) {
-                // Diabaikan jika tidak ada koneksi internet atau server belum dapat dihubungi
             } finally {
                 if (connection != null) {
                     connection.disconnect();
@@ -69,32 +68,29 @@ public class LiveUpdateManager {
 
     private int getCurrentVersionCode() {
         try {
-            PackageInfo packageInfo = activity.getPackageManager()
+            PackageInfo info = activity.getPackageManager()
                     .getPackageInfo(activity.getPackageName(), 0);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                return (int) packageInfo.getLongVersionCode();
-            } else {
-                return packageInfo.versionCode;
+                return (int) info.getLongVersionCode();
             }
+            return info.versionCode;
         } catch (Exception e) {
             return 1;
         }
     }
 
-    private void showUpdateDialog(String versionName, String changelog, String apkUrl) {
-        if (activity.isFinishing() || activity.isDestroyed()) {
-            return;
-        }
+    private void showUpdatePopup(String versionName, String changelog, String apkUrl) {
+        if (activity.isFinishing() || activity.isDestroyed()) return;
 
         new AlertDialog.Builder(activity)
-                .setTitle("Live Update TAPAK v" + versionName)
-                .setMessage(changelog)
+                .setTitle("Update Tersedia: TAPAK v" + versionName)
+                .setMessage("Catatan pembaruan:\n" + changelog + "\n\nUnduh file APK terbaru sekarang?")
                 .setCancelable(false)
-                .setPositiveButton("Update Sekarang", (dialog, which) -> {
+                .setPositiveButton("Download APK", (dialog, which) -> {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl));
                     activity.startActivity(intent);
                 })
-                .setNegativeButton("Nanti Saja", null)
+                .setNegativeButton("Nanti", null)
                 .show();
     }
 }
