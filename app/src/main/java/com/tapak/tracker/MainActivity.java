@@ -173,12 +173,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         btnStartPause.setOnClickListener(v -> {
             if (!isTracking) {
                 isTracking = true;
+                segmentStartRealtimeMs = SystemClock.elapsedRealtime();
                 btnStartPause.setText("JEDA");
                 btnStartPause.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FFA000")));
                 btnFinish.setVisibility(View.VISIBLE);
-                timerHandler.postDelayed(timerRunnable, 1000);
+                timerHandler.post(timerRunnable);
             } else {
+                if (segmentStartRealtimeMs > 0L) {
+                    accumulatedElapsedMs += Math.max(0L, SystemClock.elapsedRealtime() - segmentStartRealtimeMs);
+                    segmentStartRealtimeMs = 0L;
+                }
                 isTracking = false;
+                updateLiveStatsUI();
                 btnStartPause.setText("LANJUT");
                 btnStartPause.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FC4C02")));
                 timerHandler.removeCallbacks(timerRunnable);
@@ -242,6 +248,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void updateLiveStatsUI() {
+        long elapsedSeconds = getCurrentElapsedSeconds();
         long hrs = elapsedSeconds / 3600;
         long mins = (elapsedSeconds % 3600) / 60;
         long secs = elapsedSeconds % 60;
@@ -328,12 +335,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void showDownloadFormatDialog(ActivityModel item) {
-        String[] options = {"Kartu Peta PNG (Siap Upload ke Story)", "Jalur Rute GPX (File Koordinat)"};
+        String[] options = {
+                "Kartu Peta PNG (Dengan Background)",
+                "Kartu Peta PNG (No Background / Transparan)",
+                "Jalur Rute GPX (File Koordinat)"
+        };
         new AlertDialog.Builder(this)
                 .setTitle("Unduh Hasil Aktivitas")
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) {
-                        exportActivityAsPng(item);
+                        exportActivityAsPng(item, true);
+                    } else if (which == 1) {
+                        exportActivityAsPng(item, false);
                     } else {
                         exportActivityAsGpx(item);
                     }
@@ -341,12 +354,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 .show();
     }
 
-    private void exportActivityAsPng(ActivityModel item) {
+    private void exportActivityAsPng(ActivityModel item, boolean withBackground) {
         int width = 1080;
         int height = 1350;
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
-        canvas.drawColor(Color.parseColor("#14171C"));
+
+        if (withBackground) {
+            canvas.drawColor(Color.parseColor("#14171C"));
+        } else {
+            canvas.drawColor(Color.TRANSPARENT);
+        }
 
         Paint brandPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         brandPaint.setColor(Color.parseColor("#FC4C02"));
@@ -366,9 +384,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         canvas.drawText(item.sportType + " • " + item.date, 72f, 245f, subPaint);
 
         float mapLeft = 72f, mapTop = 290f, mapRight = width - 72f, mapBottom = 910f;
-        Paint boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        boxPaint.setColor(Color.parseColor("#1E232B"));
-        canvas.drawRoundRect(mapLeft, mapTop, mapRight, mapBottom, 32f, 32f, boxPaint);
+        if (withBackground) {
+            Paint boxPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            boxPaint.setColor(Color.parseColor("#1E232B"));
+            canvas.drawRoundRect(mapLeft, mapTop, mapRight, mapBottom, 32f, 32f, boxPaint);
+        }
 
         if (item.routePoints != null && item.routePoints.size() >= 2) {
             double minLat = Double.MAX_VALUE, maxLat = -Double.MAX_VALUE;
@@ -430,7 +450,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         canvas.drawText("WAKTU", 760f, 1000f, statLabel);
         canvas.drawText(item.durationStr, 760f, 1055f, statVal);
 
-        String fileName = "TAPAK_" + item.id + ".png";
+        String suffix = withBackground ? "_BG" : "_NOBG";
+        String fileName = "TAPAK_" + item.id + suffix + ".png";
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ContentValues values = new ContentValues();
@@ -456,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         } catch (Exception e) {
             Toast.makeText(this, "Gagal menyimpan PNG: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
-    }
+                    }
 
     private void exportActivityAsGpx(ActivityModel item) {
         StringBuilder gpx = new StringBuilder();
@@ -524,7 +545,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private void resetTracker() {
         isTracking = false;
-        elapsedSeconds = 0;
+        accumulatedElapsedMs = 0L;
+        segmentStartRealtimeMs = 0L;
         totalDistanceMeters = 0.0;
         lastLocation = null;
         routePoints.clear();
