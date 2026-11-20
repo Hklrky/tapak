@@ -12,26 +12,16 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class FirebaseAuthHelper {
 
     public interface AuthCallback {
         void onSuccess(FirebaseUser user);
-        void onError(String message);
-    }
-
-    public interface ActivitiesLoadCallback {
-        void onLoaded(List<ActivityModel> activities);
         void onError(String message);
     }
 
@@ -81,7 +71,7 @@ public class FirebaseAuthHelper {
                                 saveUserToDatabase(user, "email");
                                 callback.onSuccess(user);
                             } else {
-                                callback.onError("Email belum diverifikasi. Cek inbox/spam email kamu lalu verifikasi terlebih dahulu.");
+                                callback.onError("Email belum diverifikasi. Cek inbox/spam lalu tekan CEK VERIFIKASI.");
                             }
                         });
                     } else {
@@ -126,10 +116,10 @@ public class FirebaseAuthHelper {
                     saveUserToDatabase(user, "email");
                     callback.onSuccess(user);
                 } else {
-                    callback.onError("Email belum terverifikasi. Silakan klik tautan verifikasi di email kamu.");
+                    callback.onError("Email belum terverifikasi. Klik tautan di email kamu terlebih dahulu.");
                 }
             } else {
-                String err = task.getException() != null ? task.getException().getMessage() : "Gagal memeriksa status verifikasi";
+                String err = task.getException() != null ? task.getException().getMessage() : "Gagal memeriksa verifikasi";
                 callback.onError(err);
             }
         });
@@ -138,14 +128,14 @@ public class FirebaseAuthHelper {
     public void resendVerificationEmail(@NonNull AuthCallback callback) {
         FirebaseUser user = firebaseAuth.getCurrentUser();
         if (user == null) {
-            callback.onError("Masukkan email dan password lalu tekan MASUK terlebih dahulu.");
+            callback.onError("Masukkan email & password lalu tekan MASUK terlebih dahulu.");
             return;
         }
         user.sendEmailVerification().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 callback.onSuccess(user);
             } else {
-                String err = task.getException() != null ? task.getException().getMessage() : "Gagal mengirim ulang email verifikasi";
+                String err = task.getException() != null ? task.getException().getMessage() : "Gagal mengirim ulang email";
                 callback.onError(err);
             }
         });
@@ -160,7 +150,9 @@ public class FirebaseAuthHelper {
                         saveUserToDatabase(user, "google");
                         callback.onSuccess(user);
                     } else {
-                        String err = task.getException() != null ? task.getException().getMessage() : "Gagal login Google";
+                        String err = task.getException() != null
+                                ? task.getException().getMessage()
+                                : "Gagal autentikasi Firebase dengan akun Google";
                         callback.onError(err);
                     }
                 });
@@ -177,37 +169,6 @@ public class FirebaseAuthHelper {
         profile.put("lastLogin", System.currentTimeMillis());
 
         usersRef.child(user.getUid()).updateChildren(profile);
-    }
-
-    public void saveActivitiesToDatabase(String uid, List<ActivityModel> activities) {
-        if (uid == null || uid.isEmpty() || activities == null) return;
-        usersRef.child(uid).child("activities").setValue(activities);
-    }
-
-    public void loadActivitiesFromDatabase(String uid, @NonNull ActivitiesLoadCallback callback) {
-        if (uid == null || uid.isEmpty()) {
-            callback.onError("UID pengguna tidak valid");
-            return;
-        }
-        usersRef.child(uid).child("activities")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        List<ActivityModel> loaded = new ArrayList<>();
-                        for (DataSnapshot child : snapshot.getChildren()) {
-                            ActivityModel model = child.getValue(ActivityModel.class);
-                            if (model != null) {
-                                loaded.add(model);
-                            }
-                        }
-                        callback.onLoaded(loaded);
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        callback.onError(error.getMessage());
-                    }
-                });
     }
 
     public void signOut() {
