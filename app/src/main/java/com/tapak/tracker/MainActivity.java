@@ -1,6 +1,7 @@
 package com.tapak.tracker;
 
 import android.Manifest;
+import android.content.Intent;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
