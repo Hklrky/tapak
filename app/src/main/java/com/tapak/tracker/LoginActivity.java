@@ -26,6 +26,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuthHelper authHelper;
     private LiveUpdateManager liveUpdateManager;
+    private boolean isNavigatingToMain = false;
 
     private final ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -45,19 +46,20 @@ public class LoginActivity extends AppCompatActivity {
                                 @Override
                                 public void onError(String message) {
                                     setLoading(false);
-                                    Toast.makeText(LoginActivity.this, "Error: " + message, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(LoginActivity.this, "Firebase Google Error: " + message, Toast.LENGTH_LONG).show();
                                 }
                             });
                         } else {
                             setLoading(false);
-                            Toast.makeText(this, "Token Google tidak ditemukan", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "ID Token Google kosong. Cek SHA-1 di Firebase Console.", Toast.LENGTH_LONG).show();
                         }
                     } catch (ApiException e) {
                         setLoading(false);
-                        Toast.makeText(this, "Google Sign-In gagal (" + e.getStatusCode() + ")", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Google Sign-In Code " + e.getStatusCode() + ": " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 } else {
                     setLoading(false);
+                    Toast.makeText(this, "Pemilihan akun Google dibatalkan atau gagal.", Toast.LENGTH_SHORT).show();
                 }
             }
     );
@@ -70,15 +72,6 @@ public class LoginActivity extends AppCompatActivity {
         authHelper = new FirebaseAuthHelper(this);
         liveUpdateManager = new LiveUpdateManager(this);
         liveUpdateManager.checkForUpdate();
-
-        FirebaseUser currentUser = authHelper.getCurrentUser();
-        if (currentUser != null) {
-            currentUser.reload().addOnCompleteListener(task -> {
-                if (currentUser.isEmailVerified() || !"password".equals(getProviderId(currentUser))) {
-                    openMainActivity();
-                }
-            });
-        }
 
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -131,6 +124,17 @@ public class LoginActivity extends AppCompatActivity {
             setLoading(true);
             googleSignInLauncher.launch(authHelper.getGoogleSignInIntent());
         });
+
+        FirebaseUser currentUser = authHelper.getCurrentUser();
+        if (currentUser != null) {
+            currentUser.reload().addOnCompleteListener(task -> {
+                if (!isFinishing() && !isDestroyed()) {
+                    if (currentUser.isEmailVerified() || !"password".equals(getProviderId(currentUser))) {
+                        openMainActivity();
+                    }
+                }
+            });
+        }
     }
 
     private String getProviderId(FirebaseUser user) {
@@ -157,7 +161,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (isRegister) {
                     Toast.makeText(
                             LoginActivity.this,
-                            "Pendaftaran berhasil! Tautan verifikasi sudah dikirim ke " + user.getEmail() + ". Verifikasi dulu lalu tekan CEK VERIFIKASI.",
+                            "Pendaftaran berhasil! Tautan verifikasi dikirim ke " + user.getEmail() + ". Verifikasi dulu lalu tekan CEK VERIFIKASI.",
                             Toast.LENGTH_LONG
                     ).show();
                 } else {
@@ -189,7 +193,13 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void openMainActivity() {
-        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+        if (isNavigatingToMain || isFinishing() || isDestroyed()) {
+            return;
+        }
+        isNavigatingToMain = true;
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 }
