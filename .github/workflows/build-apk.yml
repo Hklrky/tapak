@@ -51,9 +51,11 @@ jobs:
 
       - name: Extract APK SHA-1 and SHA-256 Fingerprint
         run: |
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/35.0.0:$PATH"
+
           APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
           if [ ! -f "$APK_PATH" ]; then
-            APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+            APK_PATH=$(find app/build/outputs/apk -name "*.apk" 2>/dev/null | head -n 1 || true)
           fi
 
           if [ -z "$APK_PATH" ] || [ ! -f "$APK_PATH" ]; then
@@ -61,27 +63,37 @@ jobs:
             exit 1
           fi
 
-          CERT_INFO=$(keytool -list -printcert -jarfile "$APK_PATH" 2>&1 || true)
-
-          if ! echo "$CERT_INFO" | grep -qiE "SHA1|SHA-1|SHA256|SHA-256"; then
-            CERT_FILES=$(unzip -Z1 "$APK_PATH" 2>/dev/null | grep -iE "^META-INF/.*\.(RSA|DSA|EC)$" || true)
-            if [ -n "$CERT_FILES" ]; then
-              FIRST_CERT=$(echo "$CERT_FILES" | head -n 1)
-              CERT_INFO=$(unzip -p "$APK_PATH" "$FIRST_CERT" 2>/dev/null | keytool -printcert 2>&1 || true)
-            fi
+          KS_PATH="$HOME/.android/debug.keystore"
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$KS_PATH" ]; then
+            keytool -genkeypair -v \
+              -keystore "$KS_PATH" \
+              -alias androiddebugkey \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass android \
+              -keypass android \
+              -dname "CN=TAPAK, OU=Dev, O=TAPAK, L=Surabaya, S=East Java, C=ID" >/dev/null 2>&1 || true
           fi
 
-          echo "=== Output Sertifikat ==="
-          echo "$CERT_INFO"
+          HAS_CERT=$(unzip -Z1 "$APK_PATH" 2>/dev/null | grep -iE "^META-INF/.*\.(RSA|DSA|EC)$" | head -n 1 || true)
+          if [ -z "$HAS_CERT" ] && [ -f "$KS_PATH" ] && command -v apksigner >/dev/null 2>&1; then
+            apksigner sign \
+              --ks "$KS_PATH" \
+              --ks-key-alias androiddebugkey \
+              --ks-pass pass:android \
+              --key-pass pass:android \
+              "$APK_PATH" || true
+          fi
+
+          CERT_INFO=$(keytool -list -printcert -jarfile "$APK_PATH" 2>&1 || true)
+          if ! echo "$CERT_INFO" | grep -qiE "SHA1|SHA-1|SHA256|SHA-256" && [ -f "$KS_PATH" ]; then
+            CERT_INFO=$(keytool -list -v -keystore "$KS_PATH" -alias androiddebugkey -storepass android 2>&1 || true)
+          fi
 
           SHA1_VALUE=$(echo "$CERT_INFO" | grep -iE "SHA1|SHA-1" | head -n 1 | cut -d':' -f2- | xargs)
           SHA256_VALUE=$(echo "$CERT_INFO" | grep -iE "SHA256|SHA-256" | head -n 1 | cut -d':' -f2- | xargs)
-
-          if [ -z "$SHA1_VALUE" ] && [ -z "$SHA256_VALUE" ] && [ -f "$HOME/.android/debug.keystore" ]; then
-            KS_INFO=$(keytool -list -v -keystore "$HOME/.android/debug.keystore" -alias androiddebugkey -storepass android 2>&1 || true)
-            SHA1_VALUE=$(echo "$KS_INFO" | grep -iE "SHA1|SHA-1" | head -n 1 | cut -d':' -f2- | xargs)
-            SHA256_VALUE=$(echo "$KS_INFO" | grep -iE "SHA256|SHA-256" | head -n 1 | cut -d':' -f2- | xargs)
-          fi
 
           echo "APK File: $APK_PATH"
           echo "SHA-1: ${SHA1_VALUE:-Tidak ditemukan}"
