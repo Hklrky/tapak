@@ -257,11 +257,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         double distKm = totalDistanceMeters / 1000.0;
         tvDistance.setText(String.format(Locale.US, "%.2f", distKm));
 
-        if (distKm > 0.05) {
-            double paceMinPerKm = (elapsedSeconds / 60.0) / distKm;
+        if (totalDistanceMeters >= 5.0 && elapsedSeconds > 0) {
+            double paceMinPerKm = (elapsedSeconds / 60.0) / Math.max(distKm, 0.005);
             int pMin = (int) paceMinPerKm;
-            int pSec = (int) ((paceMinPerKm - pMin) * 60);
+            int pSec = (int) Math.round((paceMinPerKm - pMin) * 60);
+            if (pSec == 60) {
+                pMin++;
+                pSec = 0;
+            }
             tvPace.setText(String.format(Locale.US, "%d'%02d\"", pMin, pSec));
+        } else {
+            tvPace.setText("0'00\"");
         }
 
         int calories = calculateCalories(distKm);
