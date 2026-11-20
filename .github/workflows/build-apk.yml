@@ -49,7 +49,7 @@ jobs:
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
           gradle assembleDebug --no-daemon
 
-      - name: Extract APK SHA-1 Fingerprint
+      - name: Extract APK SHA-1 and SHA-256 Fingerprint
         run: |
           APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
           if [ ! -f "$APK_PATH" ]; then
@@ -62,21 +62,36 @@ jobs:
           fi
 
           CERT_INFO=$(keytool -list -printcert -jarfile "$APK_PATH" 2>&1 || true)
+
+          if ! echo "$CERT_INFO" | grep -qiE "SHA1|SHA-1|SHA256|SHA-256"; then
+            CERT_FILES=$(unzip -Z1 "$APK_PATH" 2>/dev/null | grep -iE "^META-INF/.*\.(RSA|DSA|EC)$" || true)
+            if [ -n "$CERT_FILES" ]; then
+              FIRST_CERT=$(echo "$CERT_FILES" | head -n 1)
+              CERT_INFO=$(unzip -p "$APK_PATH" "$FIRST_CERT" 2>/dev/null | keytool -printcert 2>&1 || true)
+            fi
+          fi
+
+          echo "=== Output Sertifikat ==="
           echo "$CERT_INFO"
 
-          SHA1_VALUE=$(echo "$CERT_INFO" | grep -i "SHA1" | head -n 1 | cut -d':' -f2- | xargs)
+          SHA1_VALUE=$(echo "$CERT_INFO" | grep -iE "SHA1|SHA-1" | head -n 1 | cut -d':' -f2- | xargs)
+          SHA256_VALUE=$(echo "$CERT_INFO" | grep -iE "SHA256|SHA-256" | head -n 1 | cut -d':' -f2- | xargs)
 
-          if [ -z "$SHA1_VALUE" ] && [ -f "$HOME/.android/debug.keystore" ]; then
-            SHA1_VALUE=$(keytool -list -v -keystore "$HOME/.android/debug.keystore" -alias androiddebugkey -storepass android 2>&1 | grep -i "SHA1" | head -n 1 | cut -d':' -f2- | xargs)
+          if [ -z "$SHA1_VALUE" ] && [ -z "$SHA256_VALUE" ] && [ -f "$HOME/.android/debug.keystore" ]; then
+            KS_INFO=$(keytool -list -v -keystore "$HOME/.android/debug.keystore" -alias androiddebugkey -storepass android 2>&1 || true)
+            SHA1_VALUE=$(echo "$KS_INFO" | grep -iE "SHA1|SHA-1" | head -n 1 | cut -d':' -f2- | xargs)
+            SHA256_VALUE=$(echo "$KS_INFO" | grep -iE "SHA256|SHA-256" | head -n 1 | cut -d':' -f2- | xargs)
           fi
 
           echo "APK File: $APK_PATH"
-          echo "SHA-1: $SHA1_VALUE"
+          echo "SHA-1: ${SHA1_VALUE:-Tidak ditemukan}"
+          echo "SHA-256: ${SHA256_VALUE:-Tidak ditemukan}"
 
           {
-            echo "### Android Signing SHA-1"
+            echo "### Android Signing Fingerprints"
             echo "- **APK:** \`$APK_PATH\`"
             echo "- **SHA-1:** \`${SHA1_VALUE:-Tidak ditemukan di sertifikat}\`"
+            echo "- **SHA-256:** \`${SHA256_VALUE:-Tidak ditemukan di sertifikat}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload APK Artifact
