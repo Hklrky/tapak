@@ -1,6 +1,6 @@
 {
   "versionCode": 4,
   "versionName": "1.3",
-  "changelog": "Update build-apk.yml",
+  "changelog": "Update LoginActivity.java",
   "apkUrl": "https://raw.githubusercontent.com/Hklrky/tapak/main/releases/tapak-latest.apk"
 }
