@@ -47,7 +47,7 @@ jobs:
       - name: Build Debug APK
         run: |
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-          gradle assembleDebug --no-daemon
+          gradle clean assembleDebug --no-daemon
 
       - name: Extract APK SHA-1 and SHA-256 Fingerprint
         run: |
