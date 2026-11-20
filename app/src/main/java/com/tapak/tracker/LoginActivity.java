@@ -1,5 +1,8 @@
 package com.tapak.tracker;
 
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -21,11 +24,11 @@ import com.google.firebase.auth.FirebaseUser;
 public class LoginActivity extends AppCompatActivity {
 
     private EditText etEmail, etPassword;
-    private Button btnLoginEmail, btnRegisterEmail, btnCheckVerified, btnResendVerification, btnGoogleSignIn;
+    private Button btnLoginEmail, btnRegisterEmail, btnGoogleSignIn;
     private ProgressBar progressAuth;
+    private View glassCard, orbOrange, orbBlue;
 
     private FirebaseAuthHelper authHelper;
-    private LiveUpdateManager liveUpdateManager;
     private boolean isNavigatingToMain = false;
 
     private final ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(
@@ -40,25 +43,29 @@ public class LoginActivity extends AppCompatActivity {
                             setLoading(true);
                             authHelper.firebaseAuthWithGoogle(account.getIdToken(), new FirebaseAuthHelper.AuthCallback() {
                                 @Override
-                                public void onSuccess(FirebaseUser user) {
+                                public void onSuccess(FirebaseUser user, boolean isNewUser) {
                                     setLoading(false);
+                                    String msg = isNewUser
+                                            ? "Akun Google berhasil didaftarkan & masuk!"
+                                            : "Selamat datang kembali di TAPAK!";
+                                    Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_SHORT).show();
                                     openMainActivity();
                                 }
 
                                 @Override
                                 public void onError(String message) {
                                     setLoading(false);
-                                    Toast.makeText(LoginActivity.this, "Login Google gagal: " + message, Toast.LENGTH_LONG).show();
+                                    Toast.makeText(LoginActivity.this, "Error: " + message, Toast.LENGTH_LONG).show();
                                 }
                             });
                         } else {
-                            Toast.makeText(this, "Token Google tidak ditemukan. Periksa SHA-1 di Firebase Console.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "ID Token Google kosong. Cek SHA-1 di Firebase Console.", Toast.LENGTH_LONG).show();
                         }
                     } catch (ApiException e) {
-                        Toast.makeText(this, "Login Google error (kode " + e.getStatusCode() + ")", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Google Sign-In gagal/dibatalkan (kode " + e.getStatusCode() + ")", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    Toast.makeText(this, "Login dibatalkan.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Login Google dibatalkan.", Toast.LENGTH_SHORT).show();
                 }
             }
     );
@@ -69,103 +76,81 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         authHelper = new FirebaseAuthHelper(this);
-        liveUpdateManager = new LiveUpdateManager(this);
-        liveUpdateManager.checkForUpdate();
+        new LiveUpdateManager(this).checkForUpdate();
 
+        glassCard = findViewById(R.id.glassCard);
+        orbOrange = findViewById(R.id.orbOrange);
+        orbBlue = findViewById(R.id.orbBlue);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLoginEmail = findViewById(R.id.btnLoginEmail);
         btnRegisterEmail = findViewById(R.id.btnRegisterEmail);
-        btnCheckVerified = findViewById(R.id.btnCheckVerified);
-        btnResendVerification = findViewById(R.id.btnResendVerification);
         btnGoogleSignIn = findViewById(R.id.btnGoogleSignIn);
         progressAuth = findViewById(R.id.progressAuth);
 
-        btnLoginEmail.setOnClickListener(v -> handleEmailAuth(false));
-        btnRegisterEmail.setOnClickListener(v -> handleEmailAuth(true));
+        startLightweightLiquidAnimation();
 
-        btnCheckVerified.setOnClickListener(v -> {
-            setLoading(true);
-            authHelper.checkEmailVerificationStatus(new FirebaseAuthHelper.AuthCallback() {
-                @Override
-                public void onSuccess(FirebaseUser user) {
-                    setLoading(false);
-                    Toast.makeText(LoginActivity.this, "Email terverifikasi!", Toast.LENGTH_SHORT).show();
-                    openMainActivity();
-                }
-
-                @Override
-                public void onError(String message) {
-                    setLoading(false);
-                    Toast.makeText(LoginActivity.this, message, Toast.LENGTH_LONG).show();
-                }
-            });
-        });
-
-        btnResendVerification.setOnClickListener(v -> {
-            setLoading(true);
-            authHelper.resendVerificationEmail(new FirebaseAuthHelper.AuthCallback() {
-                @Override
-                public void onSuccess(FirebaseUser user) {
-                    setLoading(false);
-                    Toast.makeText(LoginActivity.this, "Email verifikasi dikirim ulang. Cek inbox/spam.", Toast.LENGTH_LONG).show();
-                }
-
-                @Override
-                public void onError(String message) {
-                    setLoading(false);
-                    Toast.makeText(LoginActivity.this, message, Toast.LENGTH_LONG).show();
-                }
-            });
-        });
+        FirebaseUser currentUser = authHelper.getCurrentUser();
+        if (currentUser != null) {
+            openMainActivity();
+            return;
+        }
 
         btnGoogleSignIn.setOnClickListener(v -> {
             setLoading(true);
             googleSignInLauncher.launch(authHelper.getGoogleSignInIntent());
         });
 
-        FirebaseUser currentUser = authHelper.getCurrentUser();
-        if (currentUser != null) {
-            currentUser.reload().addOnCompleteListener(task -> {
-                if (!isFinishing() && !isDestroyed()) {
-                    if (currentUser.isEmailVerified() || !"password".equals(getProviderId(currentUser))) {
-                        openMainActivity();
-                    }
-                }
-            });
-        }
+        btnLoginEmail.setOnClickListener(v -> handleEmail(false));
+        btnRegisterEmail.setOnClickListener(v -> handleEmail(true));
     }
 
-    private String getProviderId(FirebaseUser user) {
-        if (user.getProviderData().size() > 1) {
-            return user.getProviderData().get(1).getProviderId();
-        }
-        return "password";
+    private void startLightweightLiquidAnimation() {
+        glassCard.setAlpha(0f);
+        glassCard.setTranslationY(24f);
+        glassCard.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(420)
+                .start();
+
+        animateOrb(orbOrange, 18f, -14f, 3600L);
+        animateOrb(orbBlue, -16f, 16f, 4200L);
     }
 
-    private void handleEmailAuth(boolean isRegister) {
+    private void animateOrb(View target, float dx, float dy, long duration) {
+        if (target == null) return;
+        ObjectAnimator anim = ObjectAnimator.ofPropertyValuesHolder(
+                target,
+                PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, dx),
+                PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0f, dy)
+        );
+        anim.setDuration(duration);
+        anim.setRepeatCount(ValueAnimator.INFINITE);
+        anim.setRepeatMode(ValueAnimator.REVERSE);
+        anim.start();
+    }
+
+    private void handleEmail(boolean isRegister) {
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
         if (email.isEmpty() || password.length() < 6) {
-            Toast.makeText(this, "Isi email valid dan password minimal 6 karakter", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Isi email valid & password minimal 6 karakter", Toast.LENGTH_SHORT).show();
             return;
         }
 
         setLoading(true);
-        FirebaseAuthHelper.AuthCallback callback = new FirebaseAuthHelper.AuthCallback() {
+        FirebaseAuthHelper.AuthCallback cb = new FirebaseAuthHelper.AuthCallback() {
             @Override
-            public void onSuccess(FirebaseUser user) {
+            public void onSuccess(FirebaseUser user, boolean isNewUser) {
                 setLoading(false);
-                if (isRegister) {
-                    Toast.makeText(
-                            LoginActivity.this,
-                            "Pendaftaran akun baru berhasil! Tautan verifikasi dikirim ke " + user.getEmail() + ". Verifikasi dulu lalu tekan CEK VERIFIKASI.",
-                            Toast.LENGTH_LONG
-                    ).show();
-                } else {
-                    openMainActivity();
-                }
+                Toast.makeText(
+                        LoginActivity.this,
+                        isNewUser ? "Akun berhasil didaftarkan!" : "Berhasil masuk!",
+                        Toast.LENGTH_SHORT
+                ).show();
+                openMainActivity();
             }
 
             @Override
@@ -176,25 +161,21 @@ public class LoginActivity extends AppCompatActivity {
         };
 
         if (isRegister) {
-            authHelper.registerWithEmailAndSendVerification(email, password, callback);
+            authHelper.registerWithEmail(email, password, cb);
         } else {
-            authHelper.signInWithEmail(email, password, callback);
+            authHelper.signInWithEmail(email, password, cb);
         }
     }
 
     private void setLoading(boolean loading) {
         progressAuth.setVisibility(loading ? View.VISIBLE : View.GONE);
+        btnGoogleSignIn.setEnabled(!loading);
         btnLoginEmail.setEnabled(!loading);
         btnRegisterEmail.setEnabled(!loading);
-        btnCheckVerified.setEnabled(!loading);
-        btnResendVerification.setEnabled(!loading);
-        btnGoogleSignIn.setEnabled(!loading);
     }
 
     private void openMainActivity() {
-        if (isNavigatingToMain || isFinishing() || isDestroyed()) {
-            return;
-        }
+        if (isNavigatingToMain || isFinishing() || isDestroyed()) return;
         isNavigatingToMain = true;
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
