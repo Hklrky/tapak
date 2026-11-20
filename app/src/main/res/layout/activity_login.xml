@@ -1,114 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F6F8"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="20dp">
+    android:background="#0F141B"
+    android:fillViewport="true">
 
     <LinearLayout
+        android:id="@+id/glassCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
-        android:elevation="4dp"
+        android:layout_gravity="center"
+        android:layout_margin="20dp"
+        android:background="#22FFFFFF"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="22dp">
 
         <TextView
+            android:id="@+id/tvLogoTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="TAPAK."
             android:textColor="#FC4C02"
-            android:textSize="28sp"
+            android:textSize="32sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tvFirstTimeHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:layout_marginBottom="16dp"
-            android:text="Pertama kali pakai TAPAK? Belum punya akun? Langsung DAFTAR di bawah ini lalu verifikasi email kamu."
-            android:textColor="#545B66"
+            android:layout_marginBottom="18dp"
+            android:text="Pertama kali pakai Google langsung terdaftar &amp; otomatis masuk tanpa password."
+            android:textColor="#E6EEF8"
             android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnGoogleSignIn"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:backgroundTint="#FC4C02"
+            android:text="LANJUTKAN DENGAN GOOGLE (INSTAN)"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:text="atau masuk / daftar dengan email"
+            android:textColor="#B8C4D4"
+            android:textSize="12sp" />
 
         <EditText
             android:id="@+id/etEmail"
             android:layout_width="match_parent"
             android:layout_height="48dp"
+            android:background="#1AFFFFFF"
             android:hint="Email"
             android:inputType="textEmailAddress"
-            android:paddingHorizontal="12dp" />
+            android:paddingHorizontal="14dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#9AA7B8"
+            android:textSize="14sp" />
 
         <EditText
             android:id="@+id/etPassword"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="10dp"
+            android:background="#1AFFFFFF"
             android:hint="Password (minimal 6 karakter)"
             android:inputType="textPassword"
-            android:paddingHorizontal="12dp" />
-
-        <Button
-            android:id="@+id/btnRegisterEmail"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="#FC4C02"
-            android:text="DAFTAR AKUN BARU (PERTAMA KALI)"
+            android:paddingHorizontal="14dp"
             android:textColor="#FFFFFF"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/btnLoginEmail"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="#212121"
-            android:text="SUDAH PUNYA AKUN? MASUK"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold" />
+            android:textColorHint="#9AA7B8"
+            android:textSize="14sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="14dp"
             android:orientation="horizontal"
             android:weightSum="2">
 
             <Button
-                android:id="@+id/btnCheckVerified"
-                style="?android:attr/borderlessButtonStyle"
+                android:id="@+id/btnLoginEmail"
                 android:layout_width="0dp"
-                android:layout_height="42dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
-                android:text="CEK VERIFIKASI"
-                android:textColor="#FC4C02"
-                android:textSize="12sp"
+                android:backgroundTint="#2B3646"
+                android:text="MASUK"
+                android:textColor="#FFFFFF"
                 android:textStyle="bold" />
 
             <Button
-                android:id="@+id/btnResendVerification"
-                style="?android:attr/borderlessButtonStyle"
+                android:id="@+id/btnRegisterEmail"
                 android:layout_width="0dp"
-                android:layout_height="42dp"
+                android:layout_height="46dp"
+                android:layout_marginStart="6dp"
                 android:layout_weight="1"
-                android:text="KIRIM ULANG EMAIL"
-                android:textColor="#212121"
-                android:textSize="12sp"
+                android:backgroundTint="#1A73E8"
+                android:text="DAFTAR"
+                android:textColor="#FFFFFF"
                 android:textStyle="bold" />
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btnGoogleSignIn"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="10dp"
-            android:backgroundTint="#1A73E8"
-            android:text="LANJUTKAN DENGAN GOOGLE"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold" />
 
         <ProgressBar
             android:id="@+id/progressAuth"
@@ -116,6 +114,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="12dp"
+            android:indeterminateTint="#FC4C02"
             android:visibility="gone" />
     </LinearLayout>
-</LinearLayout>
+</ScrollView>
