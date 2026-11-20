@@ -31,11 +31,13 @@ public class LoginActivity extends AppCompatActivity {
     private final ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
+                setLoading(false);
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
                     try {
                         GoogleSignInAccount account = task.getResult(ApiException.class);
                         if (account != null && account.getIdToken() != null) {
+                            setLoading(true);
                             authHelper.firebaseAuthWithGoogle(account.getIdToken(), new FirebaseAuthHelper.AuthCallback() {
                                 @Override
                                 public void onSuccess(FirebaseUser user) {
@@ -46,24 +48,21 @@ public class LoginActivity extends AppCompatActivity {
                                 @Override
                                 public void onError(String message) {
                                     setLoading(false);
-                                    Toast.makeText(LoginActivity.this, "Firebase Google Error: " + message, Toast.LENGTH_LONG).show();
+                                    Toast.makeText(LoginActivity.this, "Login Google gagal: " + message, Toast.LENGTH_LONG).show();
                                 }
                             });
                         } else {
-                            setLoading(false);
-                            Toast.makeText(this, "ID Token Google kosong. Cek SHA-1 di Firebase Console.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "Token Google tidak ditemukan. Periksa SHA-1 di Firebase Console.", Toast.LENGTH_LONG).show();
                         }
                     } catch (ApiException e) {
-                        setLoading(false);
-                        Toast.makeText(this, "Google Sign-In Code " + e.getStatusCode() + ": " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Login Google error (kode " + e.getStatusCode() + ")", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    setLoading(false);
-                    Toast.makeText(this, "Pemilihan akun Google dibatalkan atau gagal.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Login dibatalkan.", Toast.LENGTH_SHORT).show();
                 }
             }
     );
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
