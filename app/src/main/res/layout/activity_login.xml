@@ -24,11 +24,12 @@
             android:textStyle="bold" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/tvFirstTimeHint"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="16dp"
-            android:text="Wajib login &amp; verifikasi email untuk mengakses aplikasi"
+            android:text="Pertama kali pakai TAPAK? Belum punya akun? Langsung DAFTAR di bawah ini lalu verifikasi email kamu."
             android:textColor="#545B66"
             android:textSize="13sp" />
 
@@ -49,35 +50,25 @@
             android:inputType="textPassword"
             android:paddingHorizontal="12dp" />
 
-        <LinearLayout
+        <Button
+            android:id="@+id/btnRegisterEmail"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_marginTop="16dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
+            android:backgroundTint="#FC4C02"
+            android:text="DAFTAR AKUN BARU (PERTAMA KALI)"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/btnLoginEmail"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:backgroundTint="#FC4C02"
-                android:text="MASUK"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btnRegisterEmail"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:backgroundTint="#212121"
-                android:text="DAFTAR"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/btnLoginEmail"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#212121"
+            android:text="SUDAH PUNYA AKUN? MASUK"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
