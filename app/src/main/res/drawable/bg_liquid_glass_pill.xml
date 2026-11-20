@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="18dp"
-            android:text="Pertama kali pakai Google langsung terdaftar &amp; otomatis masuk tanpa password."
+            android:text="Login pakai Google"
             android:textColor="#E6EEF8"
             android:textSize="13sp" />
 
@@ -60,7 +60,7 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:backgroundTint="#FC4C02"
-            android:text="LANJUTKAN DENGAN GOOGLE (INSTAN)"
+            android:text="LANJUTKAN DENGAN GOOGLE"
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             android:textStyle="bold" />
